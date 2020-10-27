@@ -24,18 +24,18 @@ def main():
     }
     model = LogisticRegressor(**kwargs)
 
-    # Tune
-    if arguments.tune:
-        model.tune()
-
-    # Fit
-    model.fit()
-
-    # Predict
-    model.predict()
-
-    # Summarize
-    model.summarize()
+    # # Tune
+    # if arguments.tune:
+    #     model.tune()
+    #
+    # # Fit
+    # model.fit()
+    #
+    # # Predict
+    # model.predict()
+    #
+    # # Summarize
+    # model.summarize()
 
 
 if __name__ == '__main__':

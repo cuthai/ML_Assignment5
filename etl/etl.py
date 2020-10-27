@@ -18,9 +18,10 @@ class ETL:
         :param data_name: str, name of the data file passed at the command line. Below are the valid names:
             breast-cancer
             glass
-            iris
             soybean
-            vote
+            abalone
+            forest-fires
+            machine
         :param random_state: int, seed for data split
         """
         # Set the attributes to hold our data
@@ -43,7 +44,10 @@ class ETL:
         self.transform()
 
         # Split
-        self.cv_split_classification()
+        if self.classes > 0:
+            self.cv_split_classification()
+        else:
+            self.cv_split_regression()
 
         # Combine Train Sets
         self.cv_combine()
@@ -67,11 +71,6 @@ class ETL:
                             'Calcium', 'Barium', 'Iron', 'Class']
             self.data = pd.read_csv('data\\glass.data', names=column_names)
 
-        # iris
-        elif self.data_name == 'iris':
-            column_names = ['Sepal_Length', 'Sepal_Width', 'Petal_Length', 'Petal_Width', 'Class']
-            self.data = pd.read_csv('data\\iris.data', names=column_names)
-
         # soybean
         elif self.data_name == 'soybean':
             column_names = ['Date', 'Plant_Stand', 'Percip', 'Temp', 'Hail', 'Crop_Hist', 'Area_Damaged', 'Severity',
@@ -82,14 +81,20 @@ class ETL:
                             'Seed_Discolor', 'Seed_Size', 'Shriveling', 'Roots', 'Class']
             self.data = pd.read_csv('data\\soybean-small.data', names=column_names)
 
-        # vote
-        elif self.data_name == 'vote':
-            column_names = ['Class', 'Handicapped_Infants', 'Water_Project_Cost_Sharing', 'Adoption_Budget_Resolution',
-                            'Physician_Fee_Freeze', 'El_Salvador_Aid', 'Religious_Groups_School',
-                            'Anti_Satellite_Test_Ban', 'Aid_Nicaraguan_Contras', 'MX_Missile', 'Immigration',
-                            'Synfuels_Corporation_Cutback', 'Education_Spending', 'Superfund_Right_To_Sue', 'Crime',
-                            'Duty_Free_Exports', 'Export_Administration_Act_South_Africa']
-            self.data = pd.read_csv('data\\house-votes-84.data', names=column_names)
+        # abalone
+        elif self.data_name == 'abalone':
+            column_names = ['Sex', 'Length', 'Diameter', 'Height', 'Whole_Weight', 'Shucked_Weight', 'Viscera_Weight',
+                            'Shell_Weight', 'Rings']
+            self.data = pd.read_csv('data\\abalone.data', names=column_names)
+
+        # machine
+        elif self.data_name == 'machine':
+            column_names = ['Vendor', 'Model_Name', 'MYCT', 'MMIN', 'MMAX', 'CACH', 'CHMIN', 'CHMAX', 'PRP', 'ERP']
+            self.data = pd.read_csv('data\\machine.data', names=column_names)
+
+        # forest-fires
+        elif self.data_name == 'forest-fires':
+            self.data = pd.read_csv('data\\forestfires.data')
 
         # If an incorrect data_name was specified we'll raise an error here
         else:
@@ -110,18 +115,21 @@ class ETL:
         elif self.data_name == 'glass':
             self.transform_glass()
 
-        # iris
-        elif self.data_name == 'iris':
-            self.transform_iris()
-
         # soybean
         elif self.data_name == 'soybean':
             self.transform_soybean()
 
-        # vote
-        elif self.data_name == 'vote':
-            self.transform_vote()
+        # abalone
+        elif self.data_name == 'abalone':
+            self.transform_abalone()
 
+        # machine
+        elif self.data_name == 'machine':
+            self.transform_machine()
+
+        # forest-fires
+        elif self.data_name == 'forest-fires':
+            self.transform_forest_fires()
         # The extract function should catch this but lets throw again in case
         else:
             raise NameError('Please specify a predefined name for one of the 6 data sets (glass, segmentation, vote,'
@@ -189,32 +197,6 @@ class ETL:
         # Class
         self.class_names = normalized_temp_df['Class'].unique().tolist()
 
-    def transform_iris(self):
-        """
-        Function to transform iris data set
-
-        For this function data is normalized around 0
-
-        :return self.transformed_data: DataFrame, transformed data set
-        :return self.classes: int, num of classes
-        """
-        # We'll make a deep copy of our data set
-        temp_df = pd.DataFrame.copy(self.data, deep=True)
-
-        # Normalize Data
-        normalized_temp_df = (temp_df - temp_df.mean()) / temp_df.std()
-
-        # Set the class back
-        normalized_temp_df.drop(columns='Class', inplace=True)
-        normalized_temp_df['Class'] = temp_df['Class']
-
-        # Set attributes for ETL object
-        self.classes = 3
-        self.transformed_data = normalized_temp_df
-
-        # Class
-        self.class_names = temp_df['Class'].unique().tolist()
-
     def transform_soybean(self):
         """
         Function to transform soybean data set
@@ -244,11 +226,11 @@ class ETL:
         # Class
         self.class_names = temp_df['Class'].unique().tolist()
 
-    def transform_vote(self):
+    def transform_abalone(self):
         """
-        Function to transform vote data set
+        Function to transform abalone data set
 
-        For this function data is binned into categorical variables
+        For this function all numeric data is normalized using mean/standard deviation
 
         :return self.transformed_data: DataFrame, transformed data set
         :return self.classes: int, num of classes
@@ -256,55 +238,96 @@ class ETL:
         # We'll make a deep copy of our data set
         temp_df = pd.DataFrame.copy(self.data, deep=True)
 
-        # Get dummies of the binned data
-        binned_df = pd.get_dummies(temp_df, columns=['Handicapped_Infants', 'Water_Project_Cost_Sharing',
-                                                     'Adoption_Budget_Resolution', 'Physician_Fee_Freeze',
-                                                     'El_Salvador_Aid', 'Religious_Groups_School',
-                                                     'Anti_Satellite_Test_Ban', 'Aid_Nicaraguan_Contras', 'MX_Missile',
-                                                     'Immigration', 'Synfuels_Corporation_Cutback', 'Education_Spending',
-                                                     'Superfund_Right_To_Sue', 'Crime', 'Duty_Free_Exports',
-                                                     'Export_Administration_Act_South_Africa'])
+        # Normalize Data
+        normalized_temp_df = (temp_df - temp_df.mean()) / temp_df.std()
 
-        # Set the class back
-        binned_df.drop(columns='Class', inplace=True)
-        binned_df['Class'] = temp_df['Class']
+        # Add Binned variables for sex
+        normalized_temp_df = normalized_temp_df.join(pd.get_dummies(temp_df['Sex'], columns=['Sex']))
 
-        # Set attributes for ETL object
-        self.classes = 2
-        self.transformed_data = binned_df
+        # We'll remove the old binned variables and reorder our target
+        normalized_temp_df.drop(columns=['Rings', 'Sex'], inplace=True)
+        normalized_temp_df['Rings'] = temp_df['Rings']
 
-        # Class
-        self.class_names = binned_df['Class'].unique().tolist()
+        # Set attributes for ETL object, there are two total classes so this is a singular classifier
+        self.transformed_data = normalized_temp_df
+
+    def transform_machine(self):
+        """
+        Function to transform machine data set
+
+        For this function all numeric data is normalized using mean/standard deviation
+
+        :return self.transformed_data: DataFrame, transformed data set
+        :return self.classes: int, num of classes
+        """
+        # We'll make a deep copy of our data set
+        temp_df = pd.DataFrame.copy(self.data, deep=True)
+
+        # Normalize Data
+        normalized_temp_df = (temp_df - temp_df.mean()) / temp_df.std()
+
+        # We'll remove unneeded variables as well as denormalize the target
+        normalized_temp_df.drop(columns=['Vendor', 'Model_Name', 'ERP'], inplace=True)
+        normalized_temp_df['PRP'] = temp_df['PRP']
+
+        # Set attributes for ETL object, there are two total classes so this is a singular classifier
+        self.transformed_data = normalized_temp_df
+
+    def transform_forest_fires(self):
+        """
+        Function to transform forest-fires data set
+
+        For this function all numeric data is normalized using mean/standard deviation
+
+        :return self.transformed_data: DataFrame, transformed data set
+        :return self.classes: int, num of classes
+        """
+        # We'll make a deep copy of our data set
+        temp_df = pd.DataFrame.copy(self.data, deep=True)
+
+        # Normalize Data
+        normalized_temp_df = (temp_df - temp_df.mean()) / temp_df.std()
+
+        # Add Binned variables for sex
+        normalized_temp_df = normalized_temp_df.join(pd.get_dummies(temp_df[['month', 'day']],
+                                                                    columns=['month', 'day']))
+
+        # We'll remove the old binned variables and reorder our target
+        normalized_temp_df.drop(columns=['month', 'day', 'area'], inplace=True)
+        normalized_temp_df['area'] = temp_df['area']
+
+        # Set attributes for ETL object, there are two total classes so this is a singular classifier
+        self.transformed_data = normalized_temp_df
 
     def cv_split_classification(self):
         """
-        Function to split our transformed data into 10% validation and 5 cross validation splits for classification
+        Function to split our transformed data into 10% tune and 5 cross tune splits for classification
 
-        First this function randomizes a number between one and 10 to split out a validation set. After a number is
+        First this function randomizes a number between one and 10 to split out a tune set. After a number is
             randomized and the data is sorted over the class and random number. The index of the data is then mod by 5
             and each remainder represents a set for cv splitting.
 
-        :return self.test_split: dict (of DataFrames), dictionary with keys (validation, 0, 1, 2, 3, 4) referring to the
+        :return self.test_split: dict (of DataFrames), dictionary with keys (tune, 0, 1, 2, 3, 4) referring to the
             split transformed data
         """
-        # Define base data size and size of validation
+        # Define base data size and size of tune
         data_size = len(self.transformed_data)
-        validation_size = int(data_size / 10)
+        tune_size = int(data_size / 10)
 
         # Check and set the random seed
         if self.random_state:
             np.random.seed(self.random_state)
 
-        # Sample for validation
-        validation_splitter = []
+        # Sample for tune
+        tune_splitter = []
 
         # Randomize a number between 0 and 10 and multiply by the index to randomly pick observations over data set
-        for index in range(validation_size):
-            validation_splitter.append(np.random.choice(a=10) + (10 * index))
-        self.tune_data = self.transformed_data.iloc[validation_splitter]
+        for index in range(tune_size):
+            tune_splitter.append(np.random.choice(a=10) + (10 * index))
+        self.tune_data = self.transformed_data.iloc[tune_splitter]
 
-        # Determine the remaining index that weren't picked for validation
-        remainder = list(set(self.transformed_data.index) - set(validation_splitter))
+        # Determine the remaining index that weren't picked for tune
+        remainder = list(set(self.transformed_data.index) - set(tune_splitter))
         remainder_df = pd.DataFrame(self.transformed_data.iloc[remainder]['Class'])
 
         # Assign a random number
@@ -318,6 +341,53 @@ class ETL:
         for index in range(5):
             # Mod the index by 5 and there will be 5 remainder groups for the CV split
             splitter = remainder_df.loc[remainder_df.index % 5 == index]['index']
+
+            # Update our attribute with the dictionary for this index
+            self.test_split.update({
+                index: self.transformed_data.iloc[splitter]
+            })
+
+    def cv_split_regression(self):
+        """
+        Function to split our transformed data into 10% tune and 5 cross tune splits for regression
+
+        First this function splits out a tune set. The remainder is sampled 5 times to produce 5 cv splits.
+
+        :return self.test_split: dict (of DataFrames), dictionary with keys (tune, 0, 1, 2, 3, 4) referring to the
+            split transformed data
+        """
+        # Define base data size and size of tune and splits
+        data_size = len(self.transformed_data)
+        tune_size = int(data_size / 10)
+        cv_size = int((data_size - tune_size) / 5)
+
+        # The extra data will go to the first splits. The remainder of the length divided by 5 defines how many extra
+        extra_data = int((data_size - tune_size) % cv_size)
+
+        # Check and set the random seed
+        if self.random_state:
+            np.random.seed(self.random_state)
+
+        # Sample for tune
+        tune_splitter = np.random.choice(a=data_size, size=tune_size, replace=False)
+        self.tune_data = self.transformed_data.iloc[tune_splitter]
+
+        # Determine the remaining index that weren't picked for tune
+        remainder = list(set(self.transformed_data.index) - set(tune_splitter))
+
+        # CV Split
+        for index in range(5):
+            # For whatever number of extra data, we'll add one to each of those index
+            if (index + 1) <= extra_data:
+                # Sample for the CV size if extra data
+                splitter = np.random.choice(a=remainder, size=(cv_size + 1), replace=False)
+
+            else:
+                # Sample for the CV size
+                splitter = np.random.choice(a=remainder, size=cv_size, replace=False)
+
+            # Define the remaining unsampled data points
+            remainder = list(set(remainder) - set(splitter))
 
             # Update our attribute with the dictionary for this index
             self.test_split.update({
