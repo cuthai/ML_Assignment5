@@ -1,6 +1,6 @@
 from utils.args import args
 from etl.etl import ETL
-from logistic_regression.logistic_regression import LogisticRegressor
+from neural_network.neural_network import NeuralNetwork
 
 
 def main():
@@ -22,20 +22,22 @@ def main():
         'etl': etl,
         'step_size': arguments.step_size
     }
-    model = LogisticRegressor(**kwargs)
+    model = NeuralNetwork(**kwargs)
 
     # # Tune
     # if arguments.tune:
     #     model.tune()
-    #
-    # # Fit
-    # model.fit()
-    #
+
+    # Fit
+    model.fit()
+
     # # Predict
     # model.predict()
     #
     # # Summarize
     # model.summarize()
+
+    pass
 
 
 if __name__ == '__main__':
