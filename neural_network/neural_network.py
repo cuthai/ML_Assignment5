@@ -85,3 +85,31 @@ class NeuralNetwork:
 
                     print(i)
                     i += 1
+
+    def predict(self):
+        """
+        """
+        # Loop through the 5 CV splits
+        for index in range(5):
+            predictions = []
+
+            # Assign data
+            data = self.test_array_split[index]
+            data = np.insert(data, 0, 1, axis=1)
+
+            # Train
+            for row in data:
+                predictions.append(self.output_layer[index].predict(row))
+
+            # Compare results
+            results = pd.DataFrame.copy(self.test_split[index])
+            results['Prediction'] = predictions
+
+            # Calculate misclassification
+            misclassification = len(results[results['Class'] != results['Prediction']]) / len(results)
+
+            # Save results
+            self.test_results[index].update({
+                'results': results,
+                'misclassification': misclassification
+            })

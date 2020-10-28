@@ -49,3 +49,15 @@ class OutputLayer:
             return True
         else:
             return False
+
+    def predict(self, data):
+        # Assign X
+        x = data[:-1].astype(float)
+
+        output = np.matmul(x[:, None].T, self.weights.T)
+        likelihood = (np.exp(output) / np.sum(np.exp(output), axis=1)[:, None])
+        prediction_index = np.argmax(likelihood, axis=1).astype('O')[0]
+
+        prediction = self.class_names[prediction_index]
+
+        return prediction

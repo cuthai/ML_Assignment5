@@ -31,9 +31,9 @@ def main():
     # Fit
     model.fit()
 
-    # # Predict
-    # model.predict()
-    #
+    # Predict
+    model.predict()
+
     # # Summarize
     # model.summarize()
 
