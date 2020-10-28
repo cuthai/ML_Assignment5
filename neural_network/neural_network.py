@@ -6,7 +6,7 @@ from neural_network.output_layer import OutputLayer
 
 
 class NeuralNetwork:
-    def __init__(self, etl, step_size=.01, hidden_layers=0):
+    def __init__(self, etl, step_size=.01, hidden_layers_count=0):
         """
         Init function
 
@@ -28,7 +28,7 @@ class NeuralNetwork:
 
         # Tune Variables
         self.step_size = step_size
-        self.hidden_layers = hidden_layers
+        self.hidden_layers_count = hidden_layers_count
 
         # Data Variables
         self.tune_data = etl.tune_data
@@ -113,3 +113,44 @@ class NeuralNetwork:
                 'results': results,
                 'misclassification': misclassification
             })
+
+    def summarize(self):
+        """
+        Summarize Function
+
+        This function outputs a CSV and a JSON file for the results of the predict. The CSV is the combined results of
+            all 5 CV splits and their prediction. The JSON file is the step_size used and the misclassification.
+
+        :return csv: csv, output of predictions of all CV splits to output folder
+        :return json: json, dictionary of the results of all CV splits to output folder
+        """
+        # Calculate misclassification
+        misclassification = sum([self.test_results[index]['misclassification'] for index in range(5)])
+
+        # Summary JSON
+        self.summary = {
+            'tune': {
+                'step_size': self.step_size,
+                'hidden_layers_count': self.hidden_layers_count
+            },
+            'test': {
+                'misclassification': misclassification / 5
+            }
+        }
+
+        # Output JSON
+        with open(f'output_{self.data_name}\\'
+                  f'{self.data_name}_{self.hidden_layers_count}_layers_summary.json', 'w') as file:
+            json.dump(self.summary, file)
+
+        # Summary CSV
+        summary_classification = pd.DataFrame()
+
+        # Loop through each test data set and add the results
+        for index in range(5):
+            summary_classification = summary_classification.append(self.test_results[index]['results'])
+
+        # Dump CSV and save
+        summary_classification.to_csv(f'output_{self.data_name}\\'
+                                      f'{self.data_name}_{self.hidden_layers_count}_layers_predictions.csv')
+        self.summary_classification = summary_classification

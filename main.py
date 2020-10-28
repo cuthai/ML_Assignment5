@@ -34,8 +34,8 @@ def main():
     # Predict
     model.predict()
 
-    # # Summarize
-    # model.summarize()
+    # Summarize
+    model.summarize()
 
     pass
 
