@@ -21,7 +21,8 @@ def main():
     kwargs = {
         'etl': etl,
         'step_size': arguments.step_size,
-        'hidden_layers_count': arguments.hidden_layers_count
+        'hidden_layers_count': arguments.hidden_layers_count,
+        'node_count': arguments.node_count
     }
     model = NeuralNetwork(**kwargs)
 

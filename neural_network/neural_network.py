@@ -7,7 +7,7 @@ from neural_network.hidden_layer import HiddenLayer
 
 
 class NeuralNetwork:
-    def __init__(self, etl, step_size=.01, hidden_layers_count=1):
+    def __init__(self, etl, step_size=.1, hidden_layers_count=1, node_count=2):
         """
         Init function
 
@@ -30,7 +30,7 @@ class NeuralNetwork:
         # Tune Variables
         self.step_size = step_size
         self.hidden_layers_count = hidden_layers_count
-        self.node_count = 2
+        self.node_count = node_count
         self.convergence_threshold = .01
 
         # Data Variables
@@ -74,6 +74,9 @@ class NeuralNetwork:
             for index in range(5)
         }
 
+        # Train Results
+        self.epochs = {index: 0 for index in range(5)}
+
         # Tune Results
         self.tune_results = {
             round(step_size, 2): None for step_size in np.linspace(.01, .25, 25)
@@ -103,6 +106,7 @@ class NeuralNetwork:
                 data = self.train_array_split[index]
                 data = np.insert(data, 0, 1, axis=1)
                 np.random.shuffle(data)
+                self.epochs[index] += 1
 
                 # Train
                 for row in data:
@@ -177,6 +181,9 @@ class NeuralNetwork:
                 'hidden_layers_count': self.hidden_layers_count,
                 'node_count': self.node_count,
                 'convergence_threshold': self.convergence_threshold
+            },
+            'train': {
+                'epochs': self.epochs
             },
             'test': {
                 'misclassification': misclassification / 5

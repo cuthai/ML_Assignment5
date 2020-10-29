@@ -27,7 +27,7 @@ class OutputLayer:
         weights_delta = np.zeros((self.weights.shape[0], self.weights.shape[1]))
         entropy = 0
 
-        backpropagation = 0
+        backpropagation = np.zeros(self.input_count)
 
         # For each class, we will calculate the changes to delta
         for index in range(self.classes):
@@ -38,7 +38,9 @@ class OutputLayer:
                 actual = 0
 
             difference = (actual - likelihood[:, index])
-            backpropagation += sum(difference * self.weights[index, :])
+
+            for input_index in range(self.input_count):
+                backpropagation[input_index] += sum(difference * self.weights[index, input_index + 1])
 
             # Update the deltas for this class
             weights_delta[index, :] = x * difference

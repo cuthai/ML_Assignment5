@@ -1,5 +1,4 @@
 import numpy as np
-import math
 from neural_network.neuron import Neuron
 
 
@@ -29,4 +28,4 @@ class HiddenLayer:
 
     def update(self, backpropagation):
         for index in range(self.node_count):
-            self.nodes[index].update(backpropagation)
+            self.nodes[index].update(backpropagation[index])

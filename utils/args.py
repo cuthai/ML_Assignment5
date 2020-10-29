@@ -23,6 +23,7 @@ def args():
     parser.add_argument('-s', '--step_size', default=.01, type=float,
                         help='Step_size to pass to logistic model gradient descent')
     parser.add_argument('-hl', '--hidden_layers_count', default=0, type=int, help='Number of hidden layers to create')
+    parser.add_argument('-n', '--node_count', default=2, type=int, help='Number of nodes in each hidden layer')
 
     # Parse arguments
     command_args = parser.parse_args()
