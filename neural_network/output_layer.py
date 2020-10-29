@@ -3,16 +3,17 @@ import math
 
 
 class OutputLayer:
-    def __init__(self, dimensions, classes, class_names, step_size):
+    def __init__(self, dimensions, classes, class_names, step_size, input_count, convergence_threshold):
         self.dimensions = dimensions
         self.classes = classes
         self.class_names = class_names
+        self.input_count = input_count
 
         # Tune Variables
         self.step_size = step_size
-        self.convergence = .001
+        self.convergence_threshold = convergence_threshold
 
-        self.weights = np.random.uniform(low=-.01, high=.01, size=(self.classes, self.dimensions + 1))
+        self.weights = np.random.uniform(low=-.01, high=.01, size=(self.classes, self.input_count + 1))
 
     def fit(self, data):
         # Assign X and Y
@@ -45,7 +46,7 @@ class OutputLayer:
 
         print(entropy)
 
-        if entropy < self.convergence:
+        if entropy < self.convergence_threshold:
             return True
         else:
             return False

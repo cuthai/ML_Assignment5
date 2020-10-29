@@ -3,10 +3,11 @@ import pandas as pd
 import json
 import matplotlib.pyplot as plt
 from neural_network.output_layer import OutputLayer
+from neural_network.hidden_layer import HiddenLayer
 
 
 class NeuralNetwork:
-    def __init__(self, etl, step_size=.01, hidden_layers_count=0):
+    def __init__(self, etl, step_size=.01, hidden_layers_count=1):
         """
         Init function
 
@@ -29,6 +30,8 @@ class NeuralNetwork:
         # Tune Variables
         self.step_size = step_size
         self.hidden_layers_count = hidden_layers_count
+        self.node_count = 2
+        self.convergence_threshold = .01
 
         # Data Variables
         self.tune_data = etl.tune_data
@@ -41,9 +44,34 @@ class NeuralNetwork:
         self.train_array_split = {key: self.train_split[key].to_numpy() for key in self.train_split.keys()}
 
         # Train Models
-        self.hidden_layers = {index: {} for index in range(5)}
+        if self.hidden_layers_count == 0:
+            input_count = self.dimensions
+            self.hidden_layers = None
+        else:
+            input_count = self.node_count
+            hl_kwargs = {
+                'dimensions': self.dimensions,
+                'classes': self.classes,
+                'class_names': self.class_names,
+                'step_size': self.step_size,
+                'node_count': self.node_count
+            }
+            self.hidden_layers = {
+                index: HiddenLayer(**hl_kwargs)
+                for index in range(5)
+            }
+
+        ol_kwargs = {
+            'dimensions': self.dimensions,
+            'classes': self.classes,
+            'class_names': self.class_names,
+            'step_size': self.step_size,
+            'input_count': input_count,
+            'convergence_threshold': self.convergence_threshold
+        }
         self.output_layer = {
-            index: OutputLayer(self.dimensions, self.classes, self.class_names, self.step_size) for index in range(5)
+            index: OutputLayer(**ol_kwargs)
+            for index in range(5)
         }
 
         # Tune Results
@@ -78,7 +106,13 @@ class NeuralNetwork:
 
                 # Train
                 for row in data:
-                    convergence = self.output_layer[index].fit(row)
+                    current_data = row
+
+                    if self.hidden_layers:
+                        current_data = self.hidden_layers[index].predict(current_data)
+                        current_data = np.insert(current_data, 0, 1)
+
+                    convergence = self.output_layer[index].fit(current_data)
 
                     if convergence:
                         break
@@ -99,7 +133,13 @@ class NeuralNetwork:
 
             # Train
             for row in data:
-                predictions.append(self.output_layer[index].predict(row))
+                current_data = row
+
+                if self.hidden_layers:
+                    current_data = self.hidden_layers[index].predict(current_data)
+                    current_data = np.insert(current_data, 0, 1)
+
+                predictions.append(self.output_layer[index].predict(current_data))
 
             # Compare results
             results = pd.DataFrame.copy(self.test_split[index])
@@ -131,7 +171,9 @@ class NeuralNetwork:
         self.summary = {
             'tune': {
                 'step_size': self.step_size,
-                'hidden_layers_count': self.hidden_layers_count
+                'hidden_layers_count': self.hidden_layers_count,
+                'node_count': self.node_count,
+                'convergence_threshold': self.convergence_threshold
             },
             'test': {
                 'misclassification': misclassification / 5

@@ -1,0 +1,1 @@
+{"tune": {"step_size": 0.01, "hidden_layers_count": 1}, "test": {"misclassification": 0.40975609756097564}}

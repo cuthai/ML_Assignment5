@@ -205,7 +205,7 @@ class LogisticRegressor:
             # Calculate new misclassification
             new_misclassification = sum(predictions != y) / len(y)
 
-            # Stop condition, if no convergence, set misclassification to new and continue while
+            # Stop condition, if no convergence_threshold, set misclassification to new and continue while
             if new_misclassification < misclassification:
                 misclassification = new_misclassification
 

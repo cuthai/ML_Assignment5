@@ -20,7 +20,8 @@ def main():
     # Set up kwargs and create object
     kwargs = {
         'etl': etl,
-        'step_size': arguments.step_size
+        'step_size': arguments.step_size,
+        'hidden_layers_count': arguments.hidden_layers_count
     }
     model = NeuralNetwork(**kwargs)
 
