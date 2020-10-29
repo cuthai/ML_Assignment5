@@ -16,9 +16,9 @@ class HiddenLayer:
         self.nodes = [Neuron(dimensions, classes, class_names, step_size) for index in range(node_count)]
 
     def predict(self, data):
-        y = data[-1].astype(float)
+        y = data[-1]
 
-        output = np.empty(self.node_count + 1)
+        output = np.empty(self.node_count + 1).astype('O')
 
         for index in range(self.node_count):
             output[index] = self.nodes[index].predict(data)
@@ -26,3 +26,7 @@ class HiddenLayer:
         output[index + 1] = y
 
         return output
+
+    def update(self, backpropagation):
+        for index in range(self.node_count):
+            self.nodes[index].update(backpropagation)

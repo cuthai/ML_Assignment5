@@ -112,10 +112,13 @@ class NeuralNetwork:
                         current_data = self.hidden_layers[index].predict(current_data)
                         current_data = np.insert(current_data, 0, 1)
 
-                    convergence = self.output_layer[index].fit(current_data)
+                    convergence, backpropagation = self.output_layer[index].fit(current_data)
 
                     if convergence:
                         break
+
+                    if self.hidden_layers:
+                        self.hidden_layers[index].update(backpropagation)
 
                     print(i)
                     i += 1

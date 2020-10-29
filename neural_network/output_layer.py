@@ -27,6 +27,8 @@ class OutputLayer:
         weights_delta = np.zeros((self.weights.shape[0], self.weights.shape[1]))
         entropy = 0
 
+        backpropagation = 0
+
         # For each class, we will calculate the changes to delta
         for index in range(self.classes):
             current_class = self.class_names[index]
@@ -36,20 +38,21 @@ class OutputLayer:
                 actual = 0
 
             difference = (actual - likelihood[:, index])
+            backpropagation += sum(difference * self.weights[index, :])
 
             # Update the deltas for this class
             weights_delta[index, :] = x * difference
 
             entropy -= actual * math.log(likelihood[:, index])
 
-        self.weights = self.weights + (self.step_size * weights_delta)
-
         print(entropy)
 
         if entropy < self.convergence_threshold:
-            return True
+            return True, 0
         else:
-            return False
+            self.weights = self.weights + (self.step_size * weights_delta)
+
+            return False, backpropagation
 
     def predict(self, data):
         # Assign X
