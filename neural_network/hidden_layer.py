@@ -3,15 +3,18 @@ from neural_network.neuron import Neuron
 
 
 class HiddenLayer:
-    def __init__(self, dimensions, classes, class_names, step_size, node_count, hl_index):
+    def __init__(self, dimensions, classes, class_names, hl_index, step_size, node_count):
+        # Data Variables
         self.dimensions = dimensions
         self.classes = classes
         self.class_names = class_names
-        self.node_count = node_count
+
+        # Layer Variables
         self.hl_index = hl_index
 
         # Tune Variables
         self.step_size = step_size
+        self.node_count = node_count
 
         if hl_index == 0:
             input_count = dimensions
@@ -20,8 +23,8 @@ class HiddenLayer:
 
         kwargs = {
             'dimensions': dimensions,
-            'input_count': input_count,
             'class_names': class_names,
+            'input_count': input_count,
             'step_size': step_size
         }
 

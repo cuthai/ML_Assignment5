@@ -3,10 +3,13 @@ import math
 
 
 class OutputLayer:
-    def __init__(self, dimensions, classes, class_names, step_size, input_count, convergence_threshold):
+    def __init__(self, dimensions, classes, class_names, input_count, step_size, convergence_threshold):
+        # Data Variables
         self.dimensions = dimensions
         self.classes = classes
         self.class_names = class_names
+
+        # Layer Variables
         self.input_count = input_count
 
         # Tune Variables

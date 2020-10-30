@@ -7,7 +7,7 @@ from neural_network.hidden_layer import HiddenLayer
 
 
 class NeuralNetwork:
-    def __init__(self, etl, step_size=.01, hidden_layers_count=0, node_count=2):
+    def __init__(self, etl, hidden_layers_count=0, step_size=.01, node_count=2, convergence_threshold=.01):
         """
         Init function
 
@@ -19,19 +19,20 @@ class NeuralNetwork:
         # Meta Variables
         self.etl = etl
         self.data_name = self.etl.data_name
-        self.class_names = etl.class_names
-        self.classes = etl.classes
         self.dimensions = len(etl.transformed_data.columns) - 1
+        self.classes = etl.classes
+        self.class_names = etl.class_names
 
+        # Model Variables
+        self.hidden_layers_count = hidden_layers_count
         self.type = 'c'
         if self.classes == 0:
             self.type = 'r'
 
         # Tune Variables
         self.step_size = step_size
-        self.hidden_layers_count = hidden_layers_count
         self.node_count = node_count
-        self.convergence_threshold = .01
+        self.convergence_threshold = convergence_threshold
 
         # Data Variables
         self.tune_data = etl.tune_data
@@ -44,6 +45,7 @@ class NeuralNetwork:
         self.train_array_split = {key: self.train_split[key].to_numpy() for key in self.train_split.keys()}
 
         # Train Models
+        # Hidden Layers
         if self.hidden_layers_count == 0:
             input_count = self.dimensions
             self.hidden_layers = None
@@ -63,13 +65,14 @@ class NeuralNetwork:
                 } for index in range(5)
             }
 
+        # Output Layers
         ol_kwargs = {
             'dimensions': self.dimensions,
             'classes': self.classes,
             'class_names': self.class_names,
             'step_size': self.step_size,
-            'input_count': input_count,
-            'convergence_threshold': self.convergence_threshold
+            'convergence_threshold': self.convergence_threshold,
+            'input_count': input_count
         }
         self.output_layer = {
             index: OutputLayer(**ol_kwargs)
@@ -131,6 +134,9 @@ class NeuralNetwork:
                     print(i)
                     i += 1
 
+                if self.epochs[index] >= 1000:
+                    convergence = True
+
     def predict(self):
         """
         """
@@ -182,8 +188,8 @@ class NeuralNetwork:
         # Summary JSON
         self.summary = {
             'tune': {
-                'step_size': self.step_size,
                 'hidden_layers_count': self.hidden_layers_count,
+                'step_size': self.step_size,
                 'node_count': self.node_count,
                 'convergence_threshold': self.convergence_threshold
             },

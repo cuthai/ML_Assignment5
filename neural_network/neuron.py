@@ -3,10 +3,13 @@ import math
 
 
 class Neuron:
-    def __init__(self, dimensions, input_count, class_names, step_size):
+    def __init__(self, dimensions, class_names, input_count, step_size):
+        # Data Variables
         self.dimensions = dimensions
-        self.input_count = input_count
         self.class_names = class_names
+
+        # Neuron Variables
+        self.input_count = input_count
 
         # Tune Variables
         self.step_size = step_size
