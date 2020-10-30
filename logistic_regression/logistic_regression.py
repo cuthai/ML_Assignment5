@@ -8,7 +8,7 @@ class LogisticRegressor:
     """
     Class LogisticRegressor
 
-    This class implements a logistic regression which splits the classes using a logistic discriminant and a softmax
+    This class implements a logistic regression which splits the input_count using a logistic discriminant and a softmax
         function. Weights for determining class splits are learned using gradient descent. The class with the highest
         softmax is the predicted class. Functions implemented are Tune, Fit, Predict, and Summarize. The tune function
         is optional and outputs results for various step sizes. To run a Fit on a desired step size add the command line
@@ -27,7 +27,7 @@ class LogisticRegressor:
         self.etl = etl
         self.data_name = self.etl.data_name
         self.class_names = etl.class_names
-        self.classes = etl.classes
+        self.classes = etl.input_count
 
         # Tune Variables
         self.step_size = step_size
@@ -158,8 +158,8 @@ class LogisticRegressor:
 
         :param data: np.array, data to train on
         :param step_size: float, step_size for gradient descent
-        :return weights: np.array, floats of the weights by class and dimensions (rows = classes, columns = dimensions)
-        :return intercepts: np.array, floats of the intercepts by class (rows = classes, columns = only 1)
+        :return weights: np.array, floats of the weights by class and dimensions (rows = input_count, columns = dimensions)
+        :return intercepts: np.array, floats of the intercepts by class (rows = input_count, columns = only 1)
         """
         # Grab step_size
         if not step_size:
@@ -169,7 +169,7 @@ class LogisticRegressor:
         x = data[:, :-1].astype(float)
         y = data[:, -1]
 
-        # Initial weight and intercept variables. Rows = classes, columns = dimensions
+        # Initial weight and intercept variables. Rows = input_count, columns = dimensions
         weights = np.random.uniform(low=-.01, high=.01, size=(self.classes, x.shape[1]))
         intercepts = np.zeros((self.classes, 1))
 

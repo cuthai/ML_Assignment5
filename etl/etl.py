@@ -142,7 +142,7 @@ class ETL:
         For this function missing data points are removed and data is normalized around 0
 
         :return self.transformed_data: DataFrame, transformed data set
-        :return self.classes: int, num of classes
+        :return self.input_count: int, num of input_count
         """
         # Remove missing data points
         self.data = self.data.loc[self.data['Bare_Nuclei'] != '?']
@@ -175,7 +175,7 @@ class ETL:
         For this function data is normalized around 0
 
         :return self.transformed_data: DataFrame, transformed data set
-        :return self.classes: int, num of classes
+        :return self.input_count: int, num of input_count
         """
         # We'll make a deep copy of our data set
         temp_df = pd.DataFrame.copy(self.data, deep=True)
@@ -204,7 +204,7 @@ class ETL:
         For this function data is normalized around 0
 
         :return self.transformed_data: DataFrame, transformed data set
-        :return self.classes: int, num of classes
+        :return self.input_count: int, num of input_count
         """
         # We'll make a deep copy of our data set
         temp_df = pd.DataFrame.copy(self.data, deep=True)
@@ -233,7 +233,7 @@ class ETL:
         For this function all numeric data is normalized using mean/standard deviation
 
         :return self.transformed_data: DataFrame, transformed data set
-        :return self.classes: int, num of classes
+        :return self.input_count: int, num of input_count
         """
         # We'll make a deep copy of our data set
         temp_df = pd.DataFrame.copy(self.data, deep=True)
@@ -248,7 +248,7 @@ class ETL:
         normalized_temp_df.drop(columns=['Rings', 'Sex'], inplace=True)
         normalized_temp_df['Rings'] = temp_df['Rings']
 
-        # Set attributes for ETL object, there are two total classes so this is a singular classifier
+        # Set attributes for ETL object, there are two total input_count so this is a singular classifier
         self.transformed_data = normalized_temp_df
 
     def transform_machine(self):
@@ -258,7 +258,7 @@ class ETL:
         For this function all numeric data is normalized using mean/standard deviation
 
         :return self.transformed_data: DataFrame, transformed data set
-        :return self.classes: int, num of classes
+        :return self.input_count: int, num of input_count
         """
         # We'll make a deep copy of our data set
         temp_df = pd.DataFrame.copy(self.data, deep=True)
@@ -270,7 +270,7 @@ class ETL:
         normalized_temp_df.drop(columns=['Vendor', 'Model_Name', 'ERP'], inplace=True)
         normalized_temp_df['PRP'] = temp_df['PRP']
 
-        # Set attributes for ETL object, there are two total classes so this is a singular classifier
+        # Set attributes for ETL object, there are two total input_count so this is a singular classifier
         self.transformed_data = normalized_temp_df
 
     def transform_forest_fires(self):
@@ -280,7 +280,7 @@ class ETL:
         For this function all numeric data is normalized using mean/standard deviation
 
         :return self.transformed_data: DataFrame, transformed data set
-        :return self.classes: int, num of classes
+        :return self.input_count: int, num of input_count
         """
         # We'll make a deep copy of our data set
         temp_df = pd.DataFrame.copy(self.data, deep=True)
@@ -296,7 +296,7 @@ class ETL:
         normalized_temp_df.drop(columns=['month', 'day', 'area'], inplace=True)
         normalized_temp_df['area'] = temp_df['area']
 
-        # Set attributes for ETL object, there are two total classes so this is a singular classifier
+        # Set attributes for ETL object, there are two total input_count so this is a singular classifier
         self.transformed_data = normalized_temp_df
 
     def cv_split_classification(self):

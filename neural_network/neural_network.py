@@ -7,7 +7,7 @@ from neural_network.hidden_layer import HiddenLayer
 
 
 class NeuralNetwork:
-    def __init__(self, etl, step_size=.1, hidden_layers_count=1, node_count=2):
+    def __init__(self, etl, step_size=.01, hidden_layers_count=0, node_count=2):
         """
         Init function
 
@@ -54,11 +54,13 @@ class NeuralNetwork:
                 'classes': self.classes,
                 'class_names': self.class_names,
                 'step_size': self.step_size,
-                'node_count': self.node_count
+                'node_count': self.node_count,
             }
             self.hidden_layers = {
-                index: HiddenLayer(**hl_kwargs)
-                for index in range(5)
+                index: {
+                    hl_index: HiddenLayer(**hl_kwargs, hl_index=hl_index)
+                    for hl_index in range(self.hidden_layers_count)
+                } for index in range(5)
             }
 
         ol_kwargs = {
@@ -112,17 +114,19 @@ class NeuralNetwork:
                 for row in data:
                     current_data = row
 
-                    if self.hidden_layers:
-                        current_data = self.hidden_layers[index].predict(current_data)
-                        current_data = np.insert(current_data, 0, 1)
+                    if self.hidden_layers_count > 0:
+                        for hl_index in range(self.hidden_layers_count):
+                            current_data = self.hidden_layers[index][hl_index].predict(current_data)
+                            current_data = np.insert(current_data, 0, 1)
 
                     convergence, backpropagation = self.output_layer[index].fit(current_data)
 
                     if convergence:
                         break
 
-                    if self.hidden_layers:
-                        self.hidden_layers[index].update(backpropagation)
+                    if self.hidden_layers_count > 0:
+                        for hl_index in reversed(range(self.hidden_layers_count)):
+                            backpropagation = self.hidden_layers[index][hl_index].update(backpropagation)
 
                     print(i)
                     i += 1
@@ -142,9 +146,10 @@ class NeuralNetwork:
             for row in data:
                 current_data = row
 
-                if self.hidden_layers:
-                    current_data = self.hidden_layers[index].predict(current_data)
-                    current_data = np.insert(current_data, 0, 1)
+                if self.hidden_layers_count > 0:
+                    for hl_index in range(self.hidden_layers_count):
+                        current_data = self.hidden_layers[index][hl_index].predict(current_data)
+                        current_data = np.insert(current_data, 0, 1)
 
                 predictions.append(self.output_layer[index].predict(current_data))
 
