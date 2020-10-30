@@ -84,7 +84,11 @@ class NeuralNetwork:
 
         # Tune Results
         self.tune_results = {
-            round(step_size, 2): None for step_size in np.linspace(.01, .25, 25)
+            'Step_Size': {round(step_size, 2): None for step_size in np.linspace(.01, .25, 25)},
+            'Node_Count': {node_count: None for node_count in np.linspace(1, 5, 1)},
+            'Convergence_Threshold': {
+                round(convergence_threshold, 2): None for convergence_threshold in np.linspace(.01, .25, 5)
+            },
         }
 
         # Test Results
@@ -93,6 +97,96 @@ class NeuralNetwork:
         # Summary
         self.summary = {}
         self.summary_classification = None
+
+    def tune(self, param):
+        """
+        Tune function.
+
+        This function runs through a couple of step_sizes. The model is then trained for that step_size and then tested
+            against the tune data set. The resulting misclassification is stored and then visualized as a chart. The
+            step_size for the entire model is not set here. That should be done by adding a step_size argument
+        """
+        if param == 's':
+            param_name = 'Step_Size'
+            param_range = self.tune_results[param_name].keys()
+        elif param == 'n':
+            param_name = 'Node_Count'
+            param_range = self.tune_results[param_name].keys()
+        else:
+            param_name = 'Convergence_Threshold'
+            param_range = self.tune_results[param_name].keys()
+
+        original = self.tune_data['Class'].to_list()
+
+        # Loop through step_sizes to test
+        for param_value in param_range:
+            if param == 's':
+                self.step_size = param_value
+            elif param == 'n':
+                self.node_count = param_value
+            else:
+                self.convergence_threshold = param_value
+
+            misclassification = 0
+
+            self.fit()
+
+            # Loop through the 5 CV splits
+            for index in range(5):
+                predictions = []
+
+                # Assign data
+                data = self.tune_array
+                data = np.insert(data, 0, 1, axis=1)
+
+                # Train
+                for row in data:
+                    current_data = row
+
+                    if self.hidden_layers_count > 0:
+                        for hl_index in range(self.hidden_layers_count):
+                            current_data = self.hidden_layers[index][hl_index].predict(current_data)
+                            current_data = np.insert(current_data, 0, 1)
+
+                    predictions.append(self.output_layer[index].predict(current_data))
+
+                # Calculate misclassification
+                misclassification += sum(np.array(original) != np.array(predictions)) / len(original)
+
+            # Save results
+            self.tune_results[param_name].update({param_value: misclassification / 5})
+
+        # Trigger visualization
+        self.visualize()
+
+    def visualize(self):
+        """
+        Tune visualization function
+
+        This function uses the results of the tune function to create a plot graph
+
+        :return: matplotlib saved jpg in output folder
+        """
+        # Figure / axis set up
+        fig, ax = plt.subplots()
+
+        # We'll plot the list of params and their accuracy
+        ax.plot(self.tune_results.keys(), self.tune_results.values())
+
+        # Title
+        ax.set_title(rf'{self.data_name} Tune Results')
+
+        # X axis
+        ax.set_xlabel('Step_Size')
+        ax.set_xlim(0, .25)
+        ax.set_xticks(list(self.tune_results.keys()))
+        ax.set_xticklabels(list(self.tune_results.keys()), rotation=45, fontsize=6)
+
+        # Y axis
+        ax.set_ylabel('Misclassification')
+
+        # Saving
+        plt.savefig(f'output_{self.data_name}\\logistic_{self.data_name}_tune.jpg')
 
     def fit(self):
         """

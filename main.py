@@ -20,24 +20,28 @@ def main():
     # Set up kwargs and create object
     kwargs = {
         'etl': etl,
-        'step_size': arguments.step_size,
         'hidden_layers_count': arguments.hidden_layers_count,
-        'node_count': arguments.node_count
+        'step_size': arguments.step_size,
+        'node_count': arguments.node_count,
+        'convergence_threshold': arguments.convergence_threshold
     }
     model = NeuralNetwork(**kwargs)
 
-    # # Tune
-    # if arguments.tune:
-    #     model.tune()
+    # Tune
+    if arguments.tune:
+        if arguments.tune not in ('s', 'n', 'c'):
+            raise ValueError('Please pass s, n, or c to tune the corresponding parameter')
+        model.tune(arguments.tune)
 
-    # Fit
-    model.fit()
+    else:
+        # Fit
+        model.fit()
 
-    # Predict
-    model.predict()
+        # Predict
+        model.predict()
 
-    # Summarize
-    model.summarize()
+        # Summarize
+        model.summarize()
 
     pass
 
