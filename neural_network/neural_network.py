@@ -7,7 +7,7 @@ from neural_network.hidden_layer import HiddenLayer
 
 
 class NeuralNetwork:
-    def __init__(self, etl, hidden_layers_count=0, step_size=.01, node_count=2, convergence_threshold=.01):
+    def __init__(self, etl, hidden_layers_count=0, step_size=.01, node_count=1, convergence_threshold=.01):
         """
         Init function
 
@@ -85,9 +85,9 @@ class NeuralNetwork:
         # Tune Results
         self.tune_results = {
             'Step_Size': {round(step_size, 2): None for step_size in np.linspace(.01, .25, 25)},
-            'Node_Count': {node_count: None for node_count in np.linspace(1, 5, 1)},
+            'Node_Count': {node_count: None for node_count in range(1, 11, 1)},
             'Convergence_Threshold': {
-                round(convergence_threshold, 2): None for convergence_threshold in np.linspace(.01, .25, 5)
+                round(convergence_threshold, 2): None for convergence_threshold in np.linspace(.01, .25, 25)
             },
         }
 
@@ -108,13 +108,12 @@ class NeuralNetwork:
         """
         if param == 's':
             param_name = 'Step_Size'
-            param_range = self.tune_results[param_name].keys()
         elif param == 'n':
             param_name = 'Node_Count'
-            param_range = self.tune_results[param_name].keys()
         else:
             param_name = 'Convergence_Threshold'
-            param_range = self.tune_results[param_name].keys()
+
+        param_range = self.tune_results[param_name].keys()
 
         original = self.tune_data['Class'].to_list()
 
@@ -156,10 +155,49 @@ class NeuralNetwork:
             # Save results
             self.tune_results[param_name].update({param_value: misclassification / 5})
 
-        # Trigger visualization
-        self.visualize()
+            self.reset()
 
-    def visualize(self):
+        # Trigger visualization
+        self.visualize(self.tune_results[param_name], param_name)
+
+    def reset(self):
+        if self.hidden_layers_count == 0:
+            input_count = self.dimensions
+            self.hidden_layers = None
+        else:
+            input_count = self.node_count
+            hl_kwargs = {
+                'dimensions': self.dimensions,
+                'classes': self.classes,
+                'class_names': self.class_names,
+                'step_size': self.step_size,
+                'node_count': self.node_count,
+            }
+            self.hidden_layers = {
+                index: {
+                    hl_index: HiddenLayer(**hl_kwargs, hl_index=hl_index)
+                    for hl_index in range(self.hidden_layers_count)
+                } for index in range(5)
+            }
+
+        # Output Layers
+        ol_kwargs = {
+            'dimensions': self.dimensions,
+            'classes': self.classes,
+            'class_names': self.class_names,
+            'step_size': self.step_size,
+            'convergence_threshold': self.convergence_threshold,
+            'input_count': input_count
+        }
+        self.output_layer = {
+            index: OutputLayer(**ol_kwargs)
+            for index in range(5)
+        }
+
+        # Train Results
+        self.epochs = {index: 0 for index in range(5)}
+
+    def visualize(self, data, name):
         """
         Tune visualization function
 
@@ -171,22 +209,22 @@ class NeuralNetwork:
         fig, ax = plt.subplots()
 
         # We'll plot the list of params and their accuracy
-        ax.plot(self.tune_results.keys(), self.tune_results.values())
+        ax.plot(data.keys(), data.values())
 
         # Title
-        ax.set_title(rf'{self.data_name} Tune Results')
+        ax.set_title(rf'{self.data_name} {name} Tune Results')
 
         # X axis
-        ax.set_xlabel('Step_Size')
-        ax.set_xlim(0, .25)
-        ax.set_xticks(list(self.tune_results.keys()))
-        ax.set_xticklabels(list(self.tune_results.keys()), rotation=45, fontsize=6)
+        ax.set_xlabel(name)
+        ax.set_xlim(min(data.keys()), max(data.keys()))
+        ax.set_xticks(list(data.keys()))
+        ax.set_xticklabels(list(data.keys()), rotation=45, fontsize=6)
 
         # Y axis
         ax.set_ylabel('Misclassification')
 
         # Saving
-        plt.savefig(f'output_{self.data_name}\\logistic_{self.data_name}_tune.jpg')
+        plt.savefig(f'output_{self.data_name}\\{self.data_name}_{self.hidden_layers_count}_layers_tune_{name}.jpg')
 
     def fit(self):
         """

@@ -11,7 +11,7 @@ Citation Request:
 1. Title: Forest Fires
 
 2. Sources
-   Created by: Paulo Cortez and Aníbal Morais (Univ. Minho) @ 2007
+   Created by: Paulo Cortez and Anï¿½bal Morais (Univ. Minho) @ 2007
    
 3. Past Usage:
 
@@ -33,7 +33,7 @@ Citation Request:
 4. Relevant Information:
 
    This is a very difficult regression task. It can be used to test regression methods. Also,
-   it could be used to test outlier detection methods, since it is not clear how many outliers
+   it could be used to test outlier detection methods, since it is not reset how many outliers
    are there. Yet, the number of examples of fires with a large burned area is very small.
 
 5. Number of Instances: 517 
