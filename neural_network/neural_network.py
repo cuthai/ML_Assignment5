@@ -7,6 +7,12 @@ from neural_network.hidden_layer import HiddenLayer
 
 
 class NeuralNetwork:
+    """
+    Class NeuralNetwork
+
+    Creates a NeuralNetwork object that implements hidden layers and output layers. The output layer uses a perceptron.
+        Hidden layers are activated using a sigmoid function.
+    """
     def __init__(self, etl, hidden_layers_count=0, step_size=.01, node_count=1, convergence_threshold=.01,
                  random_state=1):
         """
@@ -48,9 +54,12 @@ class NeuralNetwork:
 
         # Train Models
         # Hidden Layers
+        # If no hidden layers were set, skip
         if self.hidden_layers_count == 0:
             input_count = self.dimensions
             self.hidden_layers = None
+
+        # Otherwise set up hidden layers, the output layer's input will be the number of nodes in the hidden layers
         else:
             input_count = self.node_count
             hl_kwargs = {
@@ -67,7 +76,7 @@ class NeuralNetwork:
                 } for index in range(5)
             }
 
-        # Output Layers
+        # Output Layer
         ol_kwargs = {
             'dimensions': self.dimensions,
             'classes': self.classes,
@@ -102,12 +111,14 @@ class NeuralNetwork:
 
     def tune(self, param):
         """
-        Tune function.
+        Tune function
 
-        This function runs through a couple of step_sizes. The model is then trained for that step_size and then tested
-            against the tune data set. The resulting misclassification is stored and then visualized as a chart. The
-            step_size for the entire model is not set here. That should be done by adding a step_size argument
+        This function takes a char and tunes for the corresponding parameter. The chars are:
+            step_size (s), node_count (n), convergence_threshold(c)
+            This can be passed at the command args level. The other params are set to the defaults or whatever was
+            passed. The tune function resets the current model, and then calls to fit on the params before testing
         """
+        # Determine param being tuned
         if param == 's':
             param_name = 'Step_Size'
         elif param == 'n':
@@ -115,12 +126,15 @@ class NeuralNetwork:
         else:
             param_name = 'Convergence_Threshold'
 
+        # Grab param range
         param_range = self.tune_results[param_name].keys()
 
+        # Calculate original classes for misclassification
         original = self.tune_data['Class'].to_list()
 
         # Loop through step_sizes to test
         for param_value in param_range:
+            # Set param being tested
             if param == 's':
                 self.step_size = param_value
             elif param == 'n':
@@ -128,10 +142,11 @@ class NeuralNetwork:
             else:
                 self.convergence_threshold = param_value
 
+            # Reset model
             self.reset()
-
             misclassification = 0
 
+            # Fit model
             self.fit()
 
             # Loop through the 5 CV splits
@@ -142,15 +157,17 @@ class NeuralNetwork:
                 data = self.tune_array
                 data = np.insert(data, 0, 1, axis=1)
 
-                # Train
+                # Predict on tune dataset
                 for row in data:
                     current_data = row
 
+                    # If there are hidden layers, the data needs to go through there first
                     if self.hidden_layers_count > 0:
                         for hl_index in range(self.hidden_layers_count):
                             current_data = self.hidden_layers[index][hl_index].predict(current_data)
                             current_data = np.insert(current_data, 0, 1)
 
+                    # After hidden layers, call to output layer and grab predictions
                     predictions.append(self.output_layer[index].predict(current_data))
 
                 # Calculate misclassification
@@ -163,9 +180,18 @@ class NeuralNetwork:
         self.visualize(self.tune_results[param_name], param_name)
 
     def reset(self):
+        """
+        Reset function
+
+        This function resets the model by clearing out any trained layers and reinitializing them with the model's
+            params
+        """
+        # If no hidden layers were set, skip
         if self.hidden_layers_count == 0:
             input_count = self.dimensions
             self.hidden_layers = None
+
+        # Otherwise set up hidden layers, the output layer's input will be the number of nodes in the hidden layers
         else:
             input_count = self.node_count
             hl_kwargs = {
@@ -232,9 +258,11 @@ class NeuralNetwork:
         """
         Fit Function
 
-        This function loops through the 5 CV splits and then calls to the train function. It receives the results of the
-            train function and sets the model for that split
+        This function loops through the 5 CV splits and calls the individual layers to fit based on the data being
+            passed. Everytime the dataset is read, an epoch is added. Fit function terminates when the convergence is
+            met or 1000 epochs.
         """
+        # Set seed
         np.random.seed(self.random_state)
 
         # Loop through the 5 CV splits
@@ -242,27 +270,37 @@ class NeuralNetwork:
             convergence = False
             i = 0
 
+            # While loop, continue until convergence or epochs are met
             while not convergence:
                 # Assign data
                 data = self.train_array_split[index]
                 data = np.insert(data, 0, 1, axis=1)
+
+                # Shuffle data
                 np.random.shuffle(data)
+
+                # Increment epochs
                 self.epochs[index] += 1
 
                 # Train
                 for row in data:
+                    # Grab current row
                     current_data = row
 
+                    # Train hidden layers
                     if self.hidden_layers_count > 0:
                         for hl_index in range(self.hidden_layers_count):
                             current_data = self.hidden_layers[index][hl_index].predict(current_data)
                             current_data = np.insert(current_data, 0, 1)
 
+                    # Train output, retrieve convergence status and backpropagation
                     convergence, backpropagation = self.output_layer[index].fit(current_data)
 
+                    # Check for convergence
                     if convergence:
                         break
 
+                    # Backpropagate through hidden layers, if multiple backpropagation must be updated after layer
                     if self.hidden_layers_count > 0:
                         for hl_index in reversed(range(self.hidden_layers_count)):
                             backpropagation = self.hidden_layers[index][hl_index].update(backpropagation)
@@ -270,11 +308,15 @@ class NeuralNetwork:
                     print(i)
                     i += 1
 
+                # Check for epoch stopper
                 if self.epochs[index] >= 1000:
                     convergence = True
 
     def predict(self):
         """
+        Predict function
+
+        Loops through the CV splits and tests against trained models
         """
         # Loop through the 5 CV splits
         for index in range(5):
@@ -284,15 +326,17 @@ class NeuralNetwork:
             data = self.test_array_split[index]
             data = np.insert(data, 0, 1, axis=1)
 
-            # Train
+            # Test
             for row in data:
                 current_data = row
 
+                # If hidden layers, transform data through them and update current_data
                 if self.hidden_layers_count > 0:
                     for hl_index in range(self.hidden_layers_count):
                         current_data = self.hidden_layers[index][hl_index].predict(current_data)
                         current_data = np.insert(current_data, 0, 1)
 
+                # Get prediction from output_layer
                 predictions.append(self.output_layer[index].predict(current_data))
 
             # Compare results
