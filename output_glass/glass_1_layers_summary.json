@@ -1,1 +1,1 @@
-{"tune": {"step_size": 0.01, "hidden_layers_count": 1, "node_count": 2, "convergence_threshold": 0.3}, "train": {"epochs": {"0": 247, "1": 225, "2": 405, "3": 406, "4": 258}}, "test": {"misclassification": 0.4503373819163293}}
+{"tune": {"hidden_layers_count": 1, "step_size": 0.03, "node_count": 10, "convergence_threshold": 0.02}, "train": {"epochs": {"0": 163, "1": 175, "2": 170, "3": 173, "4": 171}}, "test": {"misclassification": 0.30580296896086373}}
