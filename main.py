@@ -23,7 +23,8 @@ def main():
         'hidden_layers_count': arguments.hidden_layers_count,
         'step_size': arguments.step_size,
         'node_count': arguments.node_count,
-        'convergence_threshold': arguments.convergence_threshold
+        'convergence_threshold': arguments.convergence_threshold,
+        'random_state': arguments.random_state
     }
     model = NeuralNetwork(**kwargs)
 

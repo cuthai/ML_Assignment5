@@ -7,7 +7,8 @@ from neural_network.hidden_layer import HiddenLayer
 
 
 class NeuralNetwork:
-    def __init__(self, etl, hidden_layers_count=0, step_size=.01, node_count=1, convergence_threshold=.01):
+    def __init__(self, etl, hidden_layers_count=0, step_size=.01, node_count=1, convergence_threshold=.01,
+                 random_state=1):
         """
         Init function
 
@@ -22,6 +23,7 @@ class NeuralNetwork:
         self.dimensions = len(etl.transformed_data.columns) - 1
         self.classes = etl.classes
         self.class_names = etl.class_names
+        self.random_state = random_state
 
         # Model Variables
         self.hidden_layers_count = hidden_layers_count
@@ -126,6 +128,8 @@ class NeuralNetwork:
             else:
                 self.convergence_threshold = param_value
 
+            self.reset()
+
             misclassification = 0
 
             self.fit()
@@ -154,8 +158,6 @@ class NeuralNetwork:
 
             # Save results
             self.tune_results[param_name].update({param_value: misclassification / 5})
-
-            self.reset()
 
         # Trigger visualization
         self.visualize(self.tune_results[param_name], param_name)
@@ -233,6 +235,8 @@ class NeuralNetwork:
         This function loops through the 5 CV splits and then calls to the train function. It receives the results of the
             train function and sets the model for that split
         """
+        np.random.seed(self.random_state)
+
         # Loop through the 5 CV splits
         for index in range(5):
             convergence = False
