@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import matplotlib.pyplot as plt
 from neural_network.output_layer import OutputLayer
+from neural_network.output_layer_regression import OutputLayerRegressor
 from neural_network.hidden_layer import HiddenLayer
 
 
@@ -85,10 +86,17 @@ class NeuralNetwork:
             'convergence_threshold': self.convergence_threshold,
             'input_count': input_count
         }
-        self.output_layer = {
-            index: OutputLayer(**ol_kwargs)
-            for index in range(5)
-        }
+        if self.type == 'c':
+            self.output_layer = {
+                index: OutputLayer(**ol_kwargs)
+                for index in range(5)
+            }
+        else:
+            ol_kwargs.update({'convergence_threshold': self.convergence_threshold * etl.squared_average_target})
+            self.output_layer = {
+                index: OutputLayerRegressor(**ol_kwargs)
+                for index in range(5)
+            }
 
         # Train Results
         self.epochs = {index: 0 for index in range(5)}
@@ -217,10 +225,16 @@ class NeuralNetwork:
             'convergence_threshold': self.convergence_threshold,
             'input_count': input_count
         }
-        self.output_layer = {
-            index: OutputLayer(**ol_kwargs)
-            for index in range(5)
-        }
+        if self.type == 'c':
+            self.output_layer = {
+                index: OutputLayer(**ol_kwargs)
+                for index in range(5)
+            }
+        else:
+            self.output_layer = {
+                index: OutputLayerRegressor(**ol_kwargs)
+                for index in range(5)
+            }
 
         # Train Results
         self.epochs = {index: 0 for index in range(5)}
@@ -344,13 +358,23 @@ class NeuralNetwork:
             results['Prediction'] = predictions
 
             # Calculate misclassification
-            misclassification = len(results[results['Class'] != results['Prediction']]) / len(results)
+            if self.type == 'c':
+                misclassification = len(results[results['Class'] != results['Prediction']]) / len(results)
 
-            # Save results
-            self.test_results[index].update({
-                'results': results,
-                'misclassification': misclassification
-            })
+                # Save results
+                self.test_results[index].update({
+                    'results': results,
+                    'misclassification': misclassification
+                })
+
+            else:
+                mse = sum((results.iloc[:, -2] - results.iloc[:, -1]) ** 2) / len(results)
+
+                # Save results
+                self.test_results[index].update({
+                    'results': results,
+                    'mse': mse
+                })
 
     def summarize(self):
         """

@@ -36,6 +36,7 @@ class ETL:
         self.random_state = random_state
         self.classes = 0
         self.class_names = None
+        self.squared_average_target = 0
 
         # Extract
         self.extract()
@@ -251,6 +252,9 @@ class ETL:
         # Set attributes for ETL object, there are two total input_count so this is a singular classifier
         self.transformed_data = normalized_temp_df
 
+        # Squared Average Target for percent_threshold
+        self.squared_average_target = temp_df.iloc[:, -1].mean() ** 2
+
     def transform_machine(self):
         """
         Function to transform machine data set
@@ -272,6 +276,9 @@ class ETL:
 
         # Set attributes for ETL object, there are two total input_count so this is a singular classifier
         self.transformed_data = normalized_temp_df
+
+        # Squared Average Target for percent_threshold
+        self.squared_average_target = temp_df.iloc[:, -1].mean() ** 2
 
     def transform_forest_fires(self):
         """
@@ -298,6 +305,9 @@ class ETL:
 
         # Set attributes for ETL object, there are two total input_count so this is a singular classifier
         self.transformed_data = normalized_temp_df
+
+        # Squared Average Target for percent_threshold
+        self.squared_average_target = temp_df.iloc[:, -1].mean() ** 2
 
     def cv_split_classification(self):
         """
