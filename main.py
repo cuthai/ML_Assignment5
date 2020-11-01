@@ -5,7 +5,7 @@ from neural_network.neural_network import NeuralNetwork
 
 def main():
     """
-    Main function to run Logistic Regression/Adaline Regression
+    Main function to run Neural Network
     """
     # Parse arguments
     arguments = args()

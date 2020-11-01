@@ -9,9 +9,12 @@ def args():
         -dn <str> (data_name) name of the data to import form the data folder
             they are: breast-cancer, car, segmentation, abalone, machine, forest-fires
         -rs <int> (random_seed) seed used for data split. Defaults to 1. All submitted output uses random_seed 1
-        -t (tune) Trigger tune for regression tree. Does nothing for classifier. This does not set thresholds, only
-            output tune results
-        -s <float> (step_size) Step_size for gradient descent
+        -t <str> (tune) Trigger tune. Pass a character to denote the param being tuned
+            they are: step_size (s), node_count (n), convergence_threshold(c)
+        -hl <int> (hidden_layers_count) Number of hidden layers, 0 is a simple perceptron
+        -s <float> (step_size) Step size to control gradient descent
+        -n <int> (node_count) number of nodes per hidden layer. If multiple layers all layers have the same count
+        -c <float> (convergence_threshold) Float to control convergence, refers to the error function
     """
     # Initialize the parser
     parser = argparse.ArgumentParser()
@@ -27,7 +30,8 @@ def args():
     parser.add_argument('-s', '--step_size', default=.01, type=float,
                         help='Step_size to pass to logistic model gradient descent')
     parser.add_argument('-n', '--node_count', default=2, type=int, help='Number of nodes in each hidden layer')
-    parser.add_argument('-c', '--convergence_threshold', default=.01, type=float, help='Convergence Threshold')
+    parser.add_argument('-c', '--convergence_threshold', default=.01, type=float,
+                        help='Convergence Threshold of error function')
 
     # Parse arguments
     command_args = parser.parse_args()
