@@ -31,6 +31,7 @@ class NeuralNetwork:
         self.classes = etl.classes
         self.class_names = etl.class_names
         self.random_state = random_state
+        self.squared_average_target = etl.squared_average_target
 
         # Model Variables
         self.hidden_layers_count = hidden_layers_count
@@ -92,7 +93,7 @@ class NeuralNetwork:
                 for index in range(5)
             }
         else:
-            ol_kwargs.update({'convergence_threshold': self.convergence_threshold * etl.squared_average_target})
+            ol_kwargs.update({'convergence_threshold': self.convergence_threshold * self.squared_average_target})
             self.output_layer = {
                 index: OutputLayerRegressor(**ol_kwargs)
                 for index in range(5)
@@ -110,12 +111,20 @@ class NeuralNetwork:
             },
         }
 
+        if self.type == 'r':
+            self.tune_results.update({
+                'Step_Size': {round(step_size, 3): None for step_size in np.linspace(.001, .025, 25)},
+                'Convergence_Threshold': {
+                    round(convergence_threshold, 5): None for convergence_threshold in np.linspace(.00001, .00025, 25)
+                }
+            })
+
         # Test Results
         self.test_results = {index: {} for index in range(5)}
 
         # Summary
         self.summary = {}
-        self.summary_classification = None
+        self.summary_prediction = None
 
     def tune(self, param):
         """
@@ -138,7 +147,7 @@ class NeuralNetwork:
         param_range = self.tune_results[param_name].keys()
 
         # Calculate original classes for misclassification
-        original = self.tune_data['Class'].to_list()
+        original = self.tune_data.iloc[:, -1].to_list()
 
         # Loop through step_sizes to test
         for param_value in param_range:
@@ -152,7 +161,7 @@ class NeuralNetwork:
 
             # Reset model
             self.reset()
-            misclassification = 0
+            target = 0
 
             # Fit model
             self.fit()
@@ -178,11 +187,14 @@ class NeuralNetwork:
                     # After hidden layers, call to output layer and grab predictions
                     predictions.append(self.output_layer[index].predict(current_data))
 
-                # Calculate misclassification
-                misclassification += sum(np.array(original) != np.array(predictions)) / len(original)
+                if self.type == 'c':
+                    # Calculate misclassification
+                    target += sum(np.array(original) != np.array(predictions)) / len(original)
+                else:
+                    target += sum((np.array(original) - np.array(predictions)) ** 2) / len(original)
 
             # Save results
-            self.tune_results[param_name].update({param_value: misclassification / 5})
+            self.tune_results[param_name].update({param_value: target / 5})
 
         # Trigger visualization
         self.visualize(self.tune_results[param_name], param_name)
@@ -231,6 +243,7 @@ class NeuralNetwork:
                 for index in range(5)
             }
         else:
+            ol_kwargs.update({'convergence_threshold': self.convergence_threshold * self.squared_average_target})
             self.output_layer = {
                 index: OutputLayerRegressor(**ol_kwargs)
                 for index in range(5)
@@ -263,7 +276,7 @@ class NeuralNetwork:
         ax.set_xticklabels(list(data.keys()), rotation=45, fontsize=6)
 
         # Y axis
-        ax.set_ylabel('Misclassification')
+        ax.set_ylabel('Target')
 
         # Saving
         plt.savefig(f'output_{self.data_name}\\{self.data_name}_{self.hidden_layers_count}_layers_tune_{name}.jpg')
@@ -386,24 +399,45 @@ class NeuralNetwork:
         :return csv: csv, output of predictions of all CV splits to output folder
         :return json: json, dictionary of the results of all CV splits to output folder
         """
-        # Calculate misclassification
-        misclassification = sum([self.test_results[index]['misclassification'] for index in range(5)])
+        if self.type == 'c':
+            # Calculate misclassification
+            misclassification = sum([self.test_results[index]['misclassification'] for index in range(5)])
 
-        # Summary JSON
-        self.summary = {
-            'tune': {
-                'hidden_layers_count': self.hidden_layers_count,
-                'step_size': self.step_size,
-                'node_count': self.node_count,
-                'convergence_threshold': self.convergence_threshold
-            },
-            'train': {
-                'epochs': self.epochs
-            },
-            'test': {
-                'misclassification': misclassification / 5
+            # Summary JSON
+            self.summary = {
+                'tune': {
+                    'hidden_layers_count': self.hidden_layers_count,
+                    'step_size': self.step_size,
+                    'node_count': self.node_count,
+                    'convergence_threshold': self.convergence_threshold
+                },
+                'train': {
+                    'epochs': self.epochs
+                },
+                'test': {
+                    'misclassification': misclassification / 5
+                }
             }
-        }
+
+        else:
+            # Calculate mse
+            mse = sum([self.test_results[index]['mse'] for index in range(5)])
+
+            # Summary JSON
+            self.summary = {
+                'tune': {
+                    'hidden_layers_count': self.hidden_layers_count,
+                    'step_size': self.step_size,
+                    'node_count': self.node_count,
+                    'convergence_threshold': self.convergence_threshold
+                },
+                'train': {
+                    'epochs': self.epochs
+                },
+                'test': {
+                    'mse': mse / 5
+                }
+            }
 
         # Output JSON
         with open(f'output_{self.data_name}\\'
@@ -411,13 +445,13 @@ class NeuralNetwork:
             json.dump(self.summary, file)
 
         # Summary CSV
-        summary_classification = pd.DataFrame()
+        summary_prediction = pd.DataFrame()
 
         # Loop through each test data set and add the results
         for index in range(5):
-            summary_classification = summary_classification.append(self.test_results[index]['results'])
+            summary_prediction = summary_prediction.append(self.test_results[index]['results'])
 
         # Dump CSV and save
-        summary_classification.to_csv(f'output_{self.data_name}\\'
+        summary_prediction.to_csv(f'output_{self.data_name}\\'
                                       f'{self.data_name}_{self.hidden_layers_count}_layers_predictions.csv')
-        self.summary_classification = summary_classification
+        self.summary_prediction = summary_prediction
