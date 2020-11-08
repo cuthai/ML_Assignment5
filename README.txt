@@ -6,18 +6,28 @@ Args:
 	Required, specifies the name of the data. Please use:
 		breast-cancer
 		glass
-		iris
         soybean
-		vote
+		abalone
+		forest-ires
+		machine
 
 	-rs <int>
 	Optional, specifies the random_state of the data for splitting. Defaults to 1
 
-	-s
-	Optional, specifies step_size to use in gradient descent for both regressions
+	-t <str>
+	Optional, triggers tune on the specified param. The params are:
+	    t
+	    n
+	    c
 
-    -t
-	Optional, specifies tuning, does not set the step_size but outputs a graph, use -s to specify step_size
+    -hl <int>
+	Optional, number of hidden layers to create
 
-	-a
-	Optional, specifies adaline regression. default: logistic
+	-s <float>
+	Optional, specified step_size to use for gradient descent
+
+	-n <int>
+	Optional, specifies nodes to use in the hidden layer
+
+	-c <float>
+	Optional, specified convergence threshold to use
