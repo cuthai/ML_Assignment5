@@ -23,6 +23,8 @@ class NeuralNetwork:
 
         :param etl: etl, etl object with transformed and split data
         :param step_size: float, desired step_size to use during training
+        :param node_count: int, number of nodes in the hidden layer
+        :param convergence_threshold: float, convergence threshold for stopping, MSE or misclassification %
         """
         # Meta Variables
         self.etl = etl
@@ -111,6 +113,7 @@ class NeuralNetwork:
             },
         }
 
+        # For regression, adjust the tune parameters lower for step size and convergence threshold
         if self.type == 'r':
             self.tune_results.update({
                 'Step_Size': {round(step_size, 3): None for step_size in np.linspace(.001, .025, 25)},
@@ -295,7 +298,6 @@ class NeuralNetwork:
         # Loop through the 5 CV splits
         for index in range(5):
             convergence = False
-            i = 0
 
             # While loop, continue until convergence or epochs are met
             while not convergence:
@@ -331,9 +333,6 @@ class NeuralNetwork:
                     if self.hidden_layers_count > 0:
                         for hl_index in reversed(range(self.hidden_layers_count)):
                             backpropagation = self.hidden_layers[index][hl_index].update(backpropagation)
-
-                    print(i)
-                    i += 1
 
                 # Check for epoch stopper
                 if self.epochs[index] >= 1000:
@@ -380,6 +379,7 @@ class NeuralNetwork:
                     'misclassification': misclassification
                 })
 
+            # Calculate MSE
             else:
                 mse = sum((results.iloc[:, -2] - results.iloc[:, -1]) ** 2) / len(results)
 
@@ -453,5 +453,5 @@ class NeuralNetwork:
 
         # Dump CSV and save
         summary_prediction.to_csv(f'output_{self.data_name}\\'
-                                      f'{self.data_name}_{self.hidden_layers_count}_layers_predictions.csv')
+                                  f'{self.data_name}_{self.hidden_layers_count}_layers_predictions.csv')
         self.summary_prediction = summary_prediction

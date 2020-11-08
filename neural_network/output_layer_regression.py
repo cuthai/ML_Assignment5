@@ -1,13 +1,11 @@
 import numpy as np
-import math
 
 
 class OutputLayerRegressor:
     """
     Class OutputLayer
 
-    This class receives the inputs and perform classification using a softmax function. The max of the function is used
-        for prediction
+    This class receives the inputs and calculates the output
     """
     def __init__(self, dimensions, classes, class_names, input_count, step_size, convergence_threshold):
         # Data Variables
@@ -29,13 +27,13 @@ class OutputLayerRegressor:
         """
         Fit function
 
-        This function calculates entropy, updates weights, and backpropagation. The function used is a softmax
+        This function calculates mse, updates weights, and backpropagation. The function used is a linear model
         """
         # Assign X and Y
         x = data[:-1].astype(float)
         y = data[-1]
 
-        # Calculate softmax function
+        # Calculate output
         output = np.matmul(x[:, None].T, self.weights.T)[0][0]
 
         # Initial delta variables, all set to 0
@@ -55,10 +53,8 @@ class OutputLayerRegressor:
             # Update the deltas for this class
             weights_delta[0, :] = x * difference
 
-            # Calculate entropy
+            # Calculate MSE
             mse = (difference ** 2)
-
-        print(mse)
 
         # Check for convergence
         if mse < self.convergence_threshold:
@@ -74,7 +70,7 @@ class OutputLayerRegressor:
         """
         Predict function
 
-        Return class based on the highest softmax class
+        Return output
         """
         # Assign X
         x = data[:-1].astype(float)
